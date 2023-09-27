@@ -1,0 +1,27 @@
+# Virtual environment
+venv/
+env/
+__pycache__/
+
+# Database
+db.sqlite3
+
+# Static files
+/static/
+/media/
+
+# Local development settings
+local_settings.py
+
+# IDE files
+.idea/
+.vscode/
+
+# Log files
+*.log
+
+# Compiled Python files
+*.pyc
+
+# Secret keys and sensitive information (add any other sensitive files here)
+secrets.json
