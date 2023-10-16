@@ -6,6 +6,12 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from .serializers import UserSerializer, OperationLevelSerializer
 from .models import User, OperationLevel
+
+from django.shortcuts import get_object_or_404
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from .models import OperationLevel
 # Create your views here.
 
 # class UserDetailsView(generics.RetrieveAPIView):
@@ -62,4 +68,33 @@ class OperationLevelViewSet(viewsets.ModelViewSet):
         return OperationLevel.objects.filter(user=self.request.user)
 
     
+class OperationLevelDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, username, operation_name):
+        # Find the user with the provided username
+        user = get_object_or_404(User, username=username)
+
+        # Find the operation level associated with the user and having the provided name
+        operation_level = get_object_or_404(OperationLevel, user=user, name=operation_name)
+
+        print("operation level:  ", operation_level)
+        # You can now work with the operation_level instance as needed
+        serializer = OperationLevelSerializer(operation_level)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
+    def put(self, request, username, operation_name):
+        # Find the user with the provided username
+        user = get_object_or_404(User, username=username)
+
+        # Find the operation level associated with the user and having the provided name
+        operation_level = get_object_or_404(OperationLevel, user=user, name=operation_name)
+
+        # Update the operation_level instance with the request data
+        serializer = OperationLevelSerializer(operation_level, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

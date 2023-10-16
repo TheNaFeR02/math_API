@@ -15,7 +15,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'operation_level')
+        fields = ('username', 'email', 'operation_level')
 
     def update(self, instance, validated_data):
         # Extract the operation_level data from validated_data
