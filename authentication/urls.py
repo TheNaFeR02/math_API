@@ -5,11 +5,12 @@ from dj_rest_auth.views import LoginView, LogoutView
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 # from .views import UserDetailsView
-from .views import UserViewSet, OperationLevelViewSet, OperationLevelDetailView
+from .views import UserViewSet, OperationLevelViewSet, OperationLevelDetailView, SessionViewSet
 
 router = DefaultRouter()
 router.register(r'user', UserViewSet,basename="user_details")
 router.register(r'operation_level', OperationLevelViewSet,basename="user_level")
+router.register(r'session', SessionViewSet,basename="user_session")
 
 
 urlpatterns = [

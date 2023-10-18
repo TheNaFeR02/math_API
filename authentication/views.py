@@ -4,8 +4,8 @@ from dj_rest_auth.views import LoginView as DefaultLoginView
 from rest_framework import generics
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
-from .serializers import UserSerializer, OperationLevelSerializer
-from .models import User, OperationLevel
+from .serializers import UserSerializer, OperationLevelSerializer, SessionSerializer
+from .models import User, OperationLevel, Session
 
 from django.shortcuts import get_object_or_404
 from rest_framework import status
@@ -48,7 +48,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         # Retrieve the current authenticated user using self.request.user
-        return User.objects.filter(id=self.request.user.id)
+        return User.objects.filter(username=self.request.user)
     
     # def update(self, request, *args, **kwargs):
     #     # update operation_level 
@@ -97,4 +97,33 @@ class OperationLevelDetailView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+# make a read only view for the sessions
+class SessionViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    serializer_class = SessionSerializer
+    queryset= Session.objects.all()
+
+    def get_queryset(self):
+        return Session.objects.filter(user=self.request.user)
+    
+    def create(self, request, *args, **kwargs):
+        # Get the authenticated user
+        user = request.user
+
+        # Extract session data from the request (modify this part as needed)
+        time = request.data.get('time')
+        new_level = request.data.get('new_level')
+        old_level = request.data.get('old_level')
+        operation = request.data.get('operation')
+        score = request.data.get('score')
+
+        # Create a session associated with the authenticated user
+        session = Session(user=user, time=time, new_level=new_level, old_level=old_level, operation=operation, score=score)
+        session.save()
+
+        # Serialize the session data and return a response
+        serializer = SessionSerializer(session)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 

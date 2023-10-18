@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, OperationLevel
+from .models import User, OperationLevel, Session
 
 class OperationLevelSerializer(serializers.ModelSerializer):
     # get user id
@@ -11,31 +11,30 @@ class OperationLevelSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    operation_level = OperationLevelSerializer(many=True, source='operationlevel_set')
+    operation_level = OperationLevelSerializer(many=True, source='operationlevel_set', required=False)
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'operation_level')
+        fields = ('username', 'email','operation_level', 'first_time_user', 'grade', 'school', 'datebirth')
 
+   
     def update(self, instance, validated_data):
-        # Extract the operation_level data from validated_data
-        operation_levels_data = validated_data.pop('operation_level', [])
+        if 'operation_level' in validated_data:
+            operation_level_data = validated_data.pop('operation_level')
+            for data in operation_level_data:
+                OperationLevel.objects.update_or_create(
+                    user=instance,
+                    name=data.get('name'),
+                    defaults={'level': data.get('level')}
+                )
+        return super(UserSerializer, self).update(instance, validated_data)
+    
 
-        # Update the User model fields (e.g., username and email)
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        instance.save()
+class SessionSerializer(serializers.ModelSerializer):
+    user = serializers.ReadOnlyField(source='user.username')
+    date = serializers.ReadOnlyField()
+    queryset= Session.objects.all()
 
-        # Update the operationlevel_set using set()
-        instance.operationlevel_set.set([])  # Clear existing related objects
-
-        for operation_level_data in operation_levels_data:
-            name = operation_level_data.get('name')
-            level = operation_level_data.get('level')
-
-            # Assuming OperationLevel has a unique identifier like 'name'
-            operation_level, created = OperationLevel.objects.get_or_create(name=name, user=instance)
-            operation_level.level = level
-            operation_level.save()
-
-        return instance
+    class Meta:
+        model = Session
+        fields = ('user', 'time', 'new_level', 'old_level', 'operation', 'score', 'date')
